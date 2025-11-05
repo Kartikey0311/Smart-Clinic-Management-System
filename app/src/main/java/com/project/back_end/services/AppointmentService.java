@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import com.project.back_end.models.Appointment;
 import com.project.back_end.repositories.AppointmentRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +22,11 @@ public class AppointmentService {
     public Appointment getAppointmentById(Long id) {
         Optional<Appointment> appointment = appointmentRepository.findById(id);
         return appointment.orElse(null);
+    }
+
+    // ✅ Required: Book Appointment Method
+    public Appointment bookAppointment(Appointment appointment) {
+        return appointmentRepository.save(appointment);
     }
 
     public Appointment saveAppointment(Appointment appointment) {
@@ -41,5 +47,10 @@ public class AppointmentService {
             return true;
         }
         return false;
+    }
+
+    // ✅ Required: Retrieve appointments by doctor & date
+    public List<Appointment> getAppointmentsByDoctorAndDate(Long doctorId, LocalDateTime date) {
+        return appointmentRepository.findByDoctorIdAndAppointmentTime(doctorId, date);
     }
 }
