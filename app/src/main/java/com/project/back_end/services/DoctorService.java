@@ -1,7 +1,7 @@
 package com.project.back_end.services;
 
 import com.project.back_end.models.Doctor;
-import com.project.back_end.repo.DoctorRepository;
+import com.project_back_end.repo.DoctorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +25,9 @@ public class DoctorService {
      * Get doctor by ID
      */
     public Doctor getDoctorById(Long id) {
-        Optional<Doctor> doctor = doctorRepository.findById(id);
-        return doctor.orElse(null);
+        return doctorRepository.findById(id).orElseThrow(
+                () -> new RuntimeException("Doctor not found with ID: " + id)
+        );
     }
 
     /**
@@ -37,15 +38,14 @@ public class DoctorService {
     }
 
     /**
-     * Get doctor by name
+     * Get doctor by exact name
      */
     public Doctor getDoctorByName(String name) {
-        Optional<Doctor> doctor = doctorRepository.findByName(name);
-        return doctor.orElse(null);
+        return doctorRepository.findByName(name).orElse(null);
     }
 
     /**
-     * Search doctors by name containing keyword
+     * Search doctors by name keyword
      */
     public List<Doctor> searchDoctorsByName(String keyword) {
         return doctorRepository.findByNameContainingIgnoreCase(keyword);
@@ -55,14 +55,16 @@ public class DoctorService {
      * Get doctor by contact info
      */
     public Doctor getDoctorByContactInfo(String contactInfo) {
-        Optional<Doctor> doctor = doctorRepository.findByContactInfo(contactInfo);
-        return doctor.orElse(null);
+        return doctorRepository.findByContactInfo(contactInfo).orElse(null);
     }
 
     /**
-     * Save or create a new doctor
+     * Save or create a doctor
      */
     public Doctor saveDoctor(Doctor doctor) {
+        if (doctor.getName() == null || doctor.getName().isBlank()) {
+            throw new IllegalArgumentException("Doctor name cannot be empty");
+        }
         return doctorRepository.save(doctor);
     }
 
@@ -70,44 +72,41 @@ public class DoctorService {
      * Update existing doctor
      */
     public Doctor updateDoctor(Long id, Doctor updatedDoctor) {
-        Optional<Doctor> existingDoctor = doctorRepository.findById(id);
-        if (existingDoctor.isPresent()) {
-            Doctor doctor = existingDoctor.get();
-            doctor.setName(updatedDoctor.getName());
-            doctor.setSpecialization(updatedDoctor.getSpecialization());
-            doctor.setContactInfo(updatedDoctor.getContactInfo());
-            return doctorRepository.save(doctor);
-        }
-        return null;
+        return doctorRepository.findById(id).map(existingDoctor -> {
+            existingDoctor.setName(updatedDoctor.getName());
+            existingDoctor.setSpecialization(updatedDoctor.getSpecialization());
+            existingDoctor.setContactInfo(updatedDoctor.getContactInfo());
+            return doctorRepository.save(existingDoctor);
+        }).orElseThrow(() -> new RuntimeException("Doctor not found with ID: " + id));
     }
 
     /**
      * Delete doctor by ID
      */
     public boolean deleteDoctor(Long id) {
-        if (doctorRepository.existsById(id)) {
-            doctorRepository.deleteById(id);
-            return true;
+        if (!doctorRepository.existsById(id)) {
+            return false;
         }
-        return false;
+        doctorRepository.deleteById(id);
+        return true;
     }
 
     /**
-     * Check if doctor exists by ID
+     * Check doctor exists by ID
      */
     public boolean doctorExists(Long id) {
         return doctorRepository.existsById(id);
     }
 
     /**
-     * Check if doctor exists by contact info
+     * Check doctor exists by contact info
      */
     public boolean doctorExistsByContactInfo(String contactInfo) {
         return doctorRepository.existsByContactInfo(contactInfo);
     }
 
     /**
-     * Count total doctors
+     * Count all doctors
      */
     public long countAllDoctors() {
         return doctorRepository.count();
