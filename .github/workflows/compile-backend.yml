@@ -1,5 +1,6 @@
 name: Compile Java Backend
 
+# Run workflow on pushes, PRs, and manual trigger
 on:
   push:
     branches: [ main, develop ]
@@ -12,9 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout repository
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    # Step 2: Set up Java 17 with Maven caching
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
@@ -22,15 +25,19 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
+    # Step 3: Build code
     - name: Build with Maven
       run: mvn clean compile
 
+    # Step 4: Run unit tests
     - name: Run tests
       run: mvn test
 
+    # Step 5: Package the application (skip tests for faster packaging)
     - name: Package application
       run: mvn package -DskipTests
 
+    # Step 6: Upload compiled JAR artifact
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -38,7 +45,8 @@ jobs:
         path: target/*.jar
         retention-days: 5
 
+    # Step 7: Display build information
     - name: Display build info
       run: |
-        echo "Build completed successfully!"
+        echo "✅ Build completed successfully!"
         ls -lh target/
