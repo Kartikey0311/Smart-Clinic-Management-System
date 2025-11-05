@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import com.project.back_end.models.Prescription;
 import com.project.back_end.services.PrescriptionService;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -15,11 +16,13 @@ public class PrescriptionController {
     @Autowired
     private PrescriptionService prescriptionService;
 
+    // Fetch all prescriptions
     @GetMapping
     public List<Prescription> getAllPrescriptions() {
         return prescriptionService.getAllPrescriptions();
     }
 
+    // Fetch prescription by ID
     @GetMapping("/{id}")
     public ResponseEntity<Prescription> getPrescriptionById(@PathVariable Long id) {
         Prescription prescription = prescriptionService.getPrescriptionById(id);
@@ -30,21 +33,25 @@ public class PrescriptionController {
         }
     }
 
+    // Fetch prescriptions for a specific patient
     @GetMapping("/patient/{patientId}")
     public List<Prescription> getPrescriptionsByPatientId(@PathVariable Long patientId) {
         return prescriptionService.getPrescriptionsByPatientId(patientId);
     }
 
+    // Fetch prescriptions for a specific doctor
     @GetMapping("/doctor/{doctorId}")
     public List<Prescription> getPrescriptionsByDoctorId(@PathVariable Long doctorId) {
         return prescriptionService.getPrescriptionsByDoctorId(doctorId);
     }
 
+    // ✅ Create a new prescription with validation
     @PostMapping
-    public Prescription createPrescription(@RequestBody Prescription prescription) {
+    public Prescription createPrescription(@Valid @RequestBody Prescription prescription) {
         return prescriptionService.savePrescription(prescription);
     }
 
+    // Update prescription
     @PutMapping("/{id}")
     public ResponseEntity<Prescription> updatePrescription(@PathVariable Long id, @RequestBody Prescription updatedPrescription) {
         Prescription prescription = prescriptionService.updatePrescription(id, updatedPrescription);
@@ -55,6 +62,7 @@ public class PrescriptionController {
         }
     }
 
+    // Delete prescription
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePrescription(@PathVariable Long id) {
         boolean deleted = prescriptionService.deletePrescription(id);
