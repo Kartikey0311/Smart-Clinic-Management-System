@@ -1,54 +1,71 @@
 package com.project.back_end.models;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
+@Entity
 public class Appointment {
-    private int appointmentId;
-    private int doctorId;
-    private int patientId;
-    private LocalDateTime appointmentDate;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "doctor_id", nullable = false)
+    private Doctor doctor;
+
+    @ManyToOne
+    @JoinColumn(name = "patient_id", nullable = false)
+    private Patient patient;
+
+    @NotNull
+    @Future
+    private LocalDateTime appointmentTime; // Required field
+
     private String status;
 
     public Appointment() {}
 
-    public Appointment(int appointmentId, int doctorId, int patientId, LocalDateTime appointmentDate, String status) {
-        this.appointmentId = appointmentId;
-        this.doctorId = doctorId;
-        this.patientId = patientId;
-        this.appointmentDate = appointmentDate;
+    public Appointment(Long id, Doctor doctor, Patient patient, LocalDateTime appointmentTime, String status) {
+        this.id = id;
+        this.doctor = doctor;
+        this.patient = patient;
+        this.appointmentTime = appointmentTime;
         this.status = status;
     }
 
-    public int getAppointmentId() {
-        return appointmentId;
+    public Long getId() {
+        return id;
     }
 
-    public void setAppointmentId(int appointmentId) {
-        this.appointmentId = appointmentId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public int getDoctorId() {
-        return doctorId;
+    public Doctor getDoctor() {
+        return doctor;
     }
 
-    public void setDoctorId(int doctorId) {
-        this.doctorId = doctorId;
+    public void setDoctor(Doctor doctor) {
+        this.doctor = doctor;
     }
 
-    public int getPatientId() {
-        return patientId;
+    public Patient getPatient() {
+        return patient;
     }
 
-    public void setPatientId(int patientId) {
-        this.patientId = patientId;
+    public void setPatient(Patient patient) {
+        this.patient = patient;
     }
 
-    public LocalDateTime getAppointmentDate() {
-        return appointmentDate;
+    public LocalDateTime getAppointmentTime() {
+        return appointmentTime;
     }
 
-    public void setAppointmentDate(LocalDateTime appointmentDate) {
-        this.appointmentDate = appointmentDate;
+    public void setAppointmentTime(LocalDateTime appointmentTime) {
+        this.appointmentTime = appointmentTime;
     }
 
     public String getStatus() {
