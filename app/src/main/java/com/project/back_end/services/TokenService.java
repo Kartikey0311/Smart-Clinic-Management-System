@@ -1,9 +1,8 @@
 package com.project.back_end.services;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -15,40 +14,41 @@ import java.util.function.Function;
 @Service
 public class TokenService {
 
-    private static final String SECRET_KEY = "your-secret-key-here-should-be-at-least-256-bits-long-for-hs256-algorithm";
+    @Value("${jwt.secret}")
+    private String secretKey;
+
     private static final long TOKEN_VALIDITY = 1000 * 60 * 60 * 10; // 10 hours
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
     /**
-     * Generate token for user
+     * Generates JWT token for given username
      */
     public String generateToken(String username) {
-        Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, username);
+        return createToken(new HashMap<>(), username);
     }
 
     /**
-     * Generate token with custom claims
+     * Generates JWT token with custom claims
      */
     public String generateToken(String username, Map<String, Object> claims) {
         return createToken(claims, username);
     }
 
     /**
-     * Create JWT token
+     * Internal method to build token
      */
     private String createToken(Map<String, Object> claims, String subject) {
         Date now = new Date();
-        Date expirationDate = new Date(now.getTime() + TOKEN_VALIDITY);
+        Date expiration = new Date(now.getTime() + TOKEN_VALIDITY);
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(now)
-                .setExpiration(expirationDate)
+                .setExpiration(expiration)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -61,50 +61,53 @@ public class TokenService {
     }
 
     /**
-     * Extract expiration date from token
+     * Extract expiration from token
      */
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
     /**
-     * Extract specific claim from token
+     * Extract specific claim using resolver function
      */
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    public <T> T extractClaim(String token, Function<Claims, T> resolver) {
         final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+        return resolver.apply(claims);
     }
 
     /**
-     * Extract all claims from token
+     * Extract all claims, with exception safety
      */
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (JwtException e) {
+            throw new RuntimeException("Invalid or expired JWT token", e);
+        }
     }
 
     /**
-     * Check if token is expired
+     * Check if token expired
      */
-    public Boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
     /**
-     * Validate token
+     * Validate token and username
      */
-    public Boolean validateToken(String token, String username) {
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
+    public boolean validateToken(String token, String username) {
+        return username.equals(extractUsername(token)) && !isTokenExpired(token);
     }
 
     /**
-     * Validate token without username check
+     * Validate token only
      */
-    public Boolean validateToken(String token) {
+    public boolean validateToken(String token) {
         try {
             return !isTokenExpired(token);
         } catch (Exception e) {
@@ -113,19 +116,16 @@ public class TokenService {
     }
 
     /**
-     * Refresh token
+     * Refresh token by issuing new one for same user
      */
     public String refreshToken(String token) {
-        final String username = extractUsername(token);
-        return generateToken(username);
+        return generateToken(extractUsername(token));
     }
 
     /**
-     * Get remaining token validity in milliseconds
+     * Get remaining token validity in ms
      */
-    public Long getRemainingValidity(String token) {
-        Date expiration = extractExpiration(token);
-        Date now = new Date();
-        return expiration.getTime() - now.getTime();
+    public long getRemainingValidity(String token) {
+        return extractExpiration(token).getTime() - new Date().getTime();
     }
 }
