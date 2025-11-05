@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import com.project.back_end.models.Doctor;
 import com.project.back_end.services.DoctorService;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -53,5 +54,20 @@ public class DoctorController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    // ✅ Required Method: Check Doctor Availability
+    @GetMapping("/{doctorId}/availability")
+    public ResponseEntity<?> checkDoctorAvailability(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("role") String role,
+            @PathVariable Long doctorId,
+            @RequestParam("date") LocalDate date) {
+
+        boolean available = doctorService.checkAvailability(token, role, doctorId, date);
+
+        return ResponseEntity.ok(
+            available ? "Doctor is available on " + date : "Doctor is not available on " + date
+        );
     }
 }
