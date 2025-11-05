@@ -1,6 +1,6 @@
-package com.project.back_end.repo;
+package com.project_back_end.repo;
 
-import com.project.back_end.models.Patient;
+import com.project_back_end.models.Patient;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,6 +27,11 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
      * Find patients by contact info
      */
     Optional<Patient> findByContactInfo(String contactInfo);
+
+    /**
+     * Find patient by email
+     */
+    Optional<Patient> findByEmail(String email);
 
     /**
      * Find patients born after a specific date
